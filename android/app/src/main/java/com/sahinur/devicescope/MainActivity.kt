@@ -1,4 +1,4 @@
-package com.yourcompany.devicescope
+package com.sahinur.devicescope
 
 import android.os.Build
 import android.os.Bundle

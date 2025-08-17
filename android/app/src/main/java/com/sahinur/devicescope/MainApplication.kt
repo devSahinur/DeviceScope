@@ -1,4 +1,4 @@
-package com.yourcompany.devicescope
+package com.sahinur.devicescope
 
 import android.app.Application
 import android.content.res.Configuration

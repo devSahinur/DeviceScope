@@ -29,6 +29,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="devicescope"/>
+        <data android:scheme="exp+devicescope"/>
       </intent-filter>
     </activity>
   </application>

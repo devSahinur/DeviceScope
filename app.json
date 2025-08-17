@@ -19,7 +19,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.devicescope",
+      "bundleIdentifier": "com.sahinur.devicescope",
       "buildNumber": "1.0.0",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses location to provide comprehensive device information.",
@@ -33,7 +33,7 @@
         "backgroundColor": "#3B82F6"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.yourcompany.devicescope",
+      "package": "com.sahinur.devicescope",
       "versionCode": 1,
       "permissions": [
         "ACCESS_FINE_LOCATION",

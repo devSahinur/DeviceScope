@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.yourcompany.devicescope'
+    namespace 'com.sahinur.devicescope'
     defaultConfig {
-        applicationId 'com.yourcompany.devicescope'
+        applicationId 'com.sahinur.devicescope'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
