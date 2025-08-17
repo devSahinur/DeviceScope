@@ -1,5 +1,5 @@
 {
-  "name": "enhanced-device-info-mobile",
+  "name": "devicescope",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -9,10 +9,29 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "expo": "~53.0.20",
+    "expo-application": "^6.1.5",
+    "expo-battery": "^9.1.4",
+    "expo-clipboard": "^7.1.5",
+    "expo-constants": "^17.1.7",
+    "expo-device": "^7.1.4",
+    "expo-file-system": "^18.1.11",
+    "expo-gl": "^15.1.7",
+    "expo-gl-cpp": "^11.4.0",
+    "expo-location": "^18.1.6",
+    "expo-network": "^7.1.5",
+    "expo-print": "^14.1.4",
+    "expo-screen-orientation": "^8.1.7",
+    "expo-sensors": "^14.1.4",
+    "expo-sharing": "^13.1.5",
     "expo-status-bar": "~2.2.3",
+    "expo-system-ui": "^5.0.10",
     "react": "19.0.0",
-    "react-native": "0.79.5"
+    "react-native": "0.79.5",
+    "react-native-chart-kit": "^6.12.0",
+    "react-native-svg": "^15.12.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

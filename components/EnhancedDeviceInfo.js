@@ -1,0 +1,426 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  RefreshControl,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
+import useEnhancedDeviceInfo from '../hooks/useEnhancedDeviceInfo';
+import usePerformanceMonitor from '../hooks/usePerformanceMonitor';
+import CollapsibleSection from './CollapsibleSection';
+import PerformanceMonitor from './PerformanceMonitor';
+import InfoTable from './InfoTable';
+import DownloadManager from './DownloadManager';
+
+const EnhancedDeviceInfo = () => {
+  const { colors, isDark } = useTheme();
+  const { deviceInfo, realtimeUpdates, toggleRealtimeUpdates, refreshData } = useEnhancedDeviceInfo();
+  const { performanceData } = usePerformanceMonitor();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [fontSize, setFontSize] = useState('medium');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fontSizes = {
+    small: 12,
+    medium: 14,
+    large: 16,
+    xl: 18,
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+  };
+
+  const styles = createStyles(colors, fontSizes[fontSize]);
+
+  if (!deviceInfo) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.text, marginTop: 16 }]}>
+          Loading comprehensive device information...
+        </Text>
+        <Text style={[styles.loadingSubtext, { color: colors.textSecondary, marginTop: 8 }]}>
+          Gathering system data and performance metrics
+        </Text>
+      </View>
+    );
+  }
+
+  const categories = {
+    'Basic Information': {
+      icon: 'information-circle',
+      keys: ['Device Name', 'Device Type', 'Brand', 'Manufacturer', 'Model Name', 'Platform', 'Platform Version', 'Is Device'],
+      color: colors.primary,
+    },
+    'Hardware Information': {
+      icon: 'hardware-chip',
+      keys: ['Model ID', 'Design Name', 'Product Name', 'Device Year Class', 'Total Memory', 'Supported CPU Architectures'],
+      color: '#8B5CF6',
+    },
+    'Display & Screen': {
+      icon: 'phone-portrait',
+      keys: ['Screen Width', 'Screen Height', 'Screen Density', 'Font Scale', 'Physical Screen Width', 'Physical Screen Height', 'Screen Orientation'],
+      color: '#10B981',
+    },
+    'Network Information': {
+      icon: 'wifi',
+      keys: ['Connection Type', 'Is Connected', 'Is Internet Reachable'],
+      color: '#3B82F6',
+    },
+    'Power & Battery': {
+      icon: 'battery-charging',
+      keys: ['Battery Level', 'Battery State', 'Power Mode'],
+      color: '#F59E0B',
+    },
+    'Application Information': {
+      icon: 'apps',
+      keys: ['App Name', 'App Version', 'Build Version', 'App ID', 'App State', 'Install Time', 'Runtime Environment', 'App Ownership'],
+      color: '#EF4444',
+    },
+    'System Information': {
+      icon: 'settings',
+      keys: ['Expo SDK Version', 'Expo Runtime Version', 'Installation ID', 'Session ID', 'Device Language', 'Available Memory', 'Architecture', 'Kernel', 'JavaScript Engine'],
+      color: '#6366F1',
+    },
+    'Performance & Optimization': {
+      icon: 'speedometer',
+      keys: ['Touch Responsiveness', 'Animation Performance', 'Memory Management', 'Background Processing'],
+      color: '#8B5CF6',
+    },
+    'Location Information': {
+      icon: 'location',
+      keys: ['Latitude', 'Longitude', 'Accuracy', 'Altitude', 'Heading', 'Speed', 'Location', 'Location Error'],
+      color: '#14B8A6',
+    },
+  };
+
+  const filteredCategories = Object.entries(categories).filter(([category, config]) => {
+    const filteredKeys = config.keys.filter((key) => {
+      const value = deviceInfo[key];
+      if (!value) return false;
+      
+      return (
+        key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (typeof value === 'string' && value.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    });
+    return filteredKeys.length > 0;
+  });
+
+  return (
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+        />
+      }
+    >
+      {/* Control Panel */}
+      <View style={styles.controlPanel}>
+        {/* Search */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text, borderColor: colors.border }]}
+            placeholder="Search device information..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+          />
+        </View>
+
+        {/* Controls */}
+        <View style={styles.controlsRow}>
+          {/* Real-time Toggle */}
+          <TouchableOpacity
+            onPress={toggleRealtimeUpdates}
+            style={[
+              styles.controlButton,
+              {
+                backgroundColor: realtimeUpdates ? colors.success : colors.surface,
+                borderColor: realtimeUpdates ? colors.success : colors.border,
+              },
+            ]}
+          >
+            <Ionicons
+              name={realtimeUpdates ? 'pause' : 'play'}
+              size={16}
+              color={realtimeUpdates ? '#FFFFFF' : colors.text}
+            />
+            <Text
+              style={[
+                styles.controlButtonText,
+                { color: realtimeUpdates ? '#FFFFFF' : colors.text },
+              ]}
+            >
+              {realtimeUpdates ? 'Live' : 'Static'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Refresh Button */}
+          <TouchableOpacity
+            onPress={refreshData}
+            style={[styles.controlButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          >
+            <Ionicons name="refresh" size={16} color="#FFFFFF" />
+            <Text style={[styles.controlButtonText, { color: '#FFFFFF' }]}>
+              Refresh
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Status Indicators */}
+        <View style={styles.statusRow}>
+          <View style={styles.statusItem}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: realtimeUpdates ? colors.success : colors.textSecondary },
+              ]}
+            />
+            <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+              {realtimeUpdates ? 'Real-time monitoring active' : 'Static view'}
+            </Text>
+          </View>
+          <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+            Last updated: {deviceInfo['Last Updated']}
+          </Text>
+        </View>
+      </View>
+
+      {/* Performance Monitor */}
+      <CollapsibleSection
+        title="Real-time Performance Monitor"
+        icon="stats-chart"
+        defaultOpen={true}
+        badge="Live Data"
+      >
+        <PerformanceMonitor />
+      </CollapsibleSection>
+
+      {/* Download Manager */}
+      <CollapsibleSection
+        title="Export & Download"
+        icon="download"
+        defaultOpen={false}
+        badge="Share Data"
+      >
+        <DownloadManager deviceInfo={deviceInfo} performanceData={performanceData} />
+      </CollapsibleSection>
+
+      {/* Device Information Sections */}
+      {filteredCategories.map(([category, config]) => {
+        const filteredKeys = config.keys.filter((key) => {
+          const value = deviceInfo[key];
+          if (!value) return false;
+          
+          return (
+            key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (typeof value === 'string' && value.toLowerCase().includes(searchTerm.toLowerCase()))
+          );
+        });
+
+        return (
+          <CollapsibleSection
+            key={category}
+            title={category}
+            icon={config.icon}
+            defaultOpen={category === 'Basic Information'}
+            badge={`${filteredKeys.length} items`}
+            color={config.color}
+          >
+            <InfoTable
+              data={filteredKeys.map(key => [key, deviceInfo[key]])}
+              searchTerm={searchTerm}
+            />
+          </CollapsibleSection>
+        );
+      })}
+
+      {/* No Results Message */}
+      {filteredCategories.length === 0 && searchTerm && (
+        <View style={styles.noResultsContainer}>
+          <Ionicons name="search" size={64} color={colors.textSecondary} />
+          <Text style={[styles.noResultsTitle, { color: colors.text }]}>
+            No results found
+          </Text>
+          <Text style={[styles.noResultsText, { color: colors.textSecondary }]}>
+            No device information matches "{searchTerm}". Try a different search term.
+          </Text>
+          <TouchableOpacity
+            onPress={() => setSearchTerm('')}
+            style={[styles.clearButton, { backgroundColor: colors.primary }]}
+          >
+            <Text style={styles.clearButtonText}>Clear Search</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Privacy Notice */}
+      <View style={[styles.privacyNotice, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '40' }]}>
+        <Ionicons name="shield-checkmark" size={20} color={colors.primary} />
+        <View style={styles.privacyContent}>
+          <Text style={[styles.privacyTitle, { color: colors.primary }]}>
+            Privacy & Security
+          </Text>
+          <Text style={[styles.privacyText, { color: colors.primary }]}>
+            All device information is processed locally on your device. No data is transmitted to external servers.
+            Location and sensitive data require explicit permission and can be disabled at any time.
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+};
+
+const createStyles = (colors, fontSize) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  loadingSubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  controlPanel: {
+    backgroundColor: colors.surface,
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: 12,
+    zIndex: 1,
+  },
+  searchInput: {
+    flex: 1,
+    height: 44,
+    paddingLeft: 40,
+    paddingRight: 16,
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: colors.background,
+    fontSize: fontSize,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  controlButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    minWidth: 80,
+  },
+  controlButtonText: {
+    marginLeft: 4,
+    fontSize: fontSize - 2,
+    fontWeight: '500',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  statusText: {
+    fontSize: fontSize - 2,
+  },
+  noResultsContainer: {
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: colors.surface,
+    margin: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  noResultsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noResultsText: {
+    fontSize: fontSize,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  clearButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  clearButtonText: {
+    color: '#FFFFFF',
+    fontSize: fontSize,
+    fontWeight: '500',
+  },
+  privacyNotice: {
+    flexDirection: 'row',
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  privacyContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  privacyTitle: {
+    fontSize: fontSize,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  privacyText: {
+    fontSize: fontSize - 2,
+    lineHeight: 18,
+  },
+});
+
+export default EnhancedDeviceInfo;
