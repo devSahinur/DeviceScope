@@ -37,18 +37,31 @@ const InfoTable = ({ data, searchTerm = '' }) => {
   const highlightText = (text, highlight) => {
     if (!highlight || typeof text !== 'string') return text;
     
-    const regex = new RegExp(`(${highlight})`, 'gi');
-    const parts = text.split(regex);
-    
-    return parts.map((part, index) =>
-      regex.test(part) ? (
-        <Text key={index} style={{ backgroundColor: colors.warning + '40' }}>
-          {part}
-        </Text>
-      ) : (
-        part
-      )
-    );
+    try {
+      const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      const parts = text.split(regex);
+      
+      return parts.map((part, index) =>
+        regex.test(part) ? (
+          <Text 
+            key={index} 
+            style={{ 
+              backgroundColor: colors.primary + '30',
+              color: colors.primary,
+              fontWeight: '700',
+              borderRadius: 3,
+              paddingHorizontal: 2,
+            }}
+          >
+            {part}
+          </Text>
+        ) : (
+          part
+        )
+      );
+    } catch (error) {
+      return text; // Fallback if regex fails
+    }
   };
 
   const formatValue = (value) => {

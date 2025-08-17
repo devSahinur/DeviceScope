@@ -25,6 +25,9 @@ const EnhancedDeviceInfo = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [fontSize, setFontSize] = useState('medium');
   const [refreshing, setRefreshing] = useState(false);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const fontSizes = {
     small: 12,
@@ -37,6 +40,42 @@ const EnhancedDeviceInfo = () => {
     setRefreshing(true);
     await refreshData();
     setRefreshing(false);
+  };
+
+  // Search suggestions and popular terms
+  const popularSearchTerms = [
+    'battery', 'memory', 'screen', 'cpu', 'network', 'storage', 
+    'device', 'platform', 'browser', 'location', 'performance'
+  ];
+
+  const getSearchSuggestions = () => {
+    if (!searchTerm) return popularSearchTerms.slice(0, 6);
+    
+    const allKeys = Object.keys(deviceInfo || {});
+    const matching = allKeys.filter(key => 
+      key.toLowerCase().includes(searchTerm.toLowerCase())
+    ).slice(0, 6);
+    
+    return matching.length > 0 ? matching : popularSearchTerms.slice(0, 6);
+  };
+
+  const handleSearchChange = (text) => {
+    setSearchTerm(text);
+    setShowSearchSuggestions(text.length > 0);
+  };
+
+  const handleSearchSelect = (term) => {
+    setSearchTerm(term);
+    setShowSearchSuggestions(false);
+    // Add to search history
+    const newHistory = [term, ...searchHistory.filter(h => h !== term)].slice(0, 5);
+    setSearchHistory(newHistory);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    setShowSearchSuggestions(false);
+    setSelectedCategory('all');
   };
 
   const styles = createStyles(colors, fontSizes[fontSize]);
@@ -103,14 +142,35 @@ const EnhancedDeviceInfo = () => {
     },
   };
 
+  // Category mapping for filters
+  const categoryMapping = {
+    'hardware': ['Hardware Information', 'Performance & Optimization'],
+    'software': ['Application Information', 'System Information'],
+    'network': ['Network Information'],
+    'battery': ['Power & Battery'],
+    'display': ['Display & Screen'],
+  };
+
   const filteredCategories = Object.entries(categories).filter(([category, config]) => {
+    // Filter by selected category first
+    if (selectedCategory !== 'all') {
+      const allowedCategories = categoryMapping[selectedCategory] || [];
+      if (!allowedCategories.includes(category)) {
+        return false;
+      }
+    }
+
+    // Then filter by search term
     const filteredKeys = config.keys.filter((key) => {
       const value = deviceInfo[key];
       if (!value) return false;
       
+      if (!searchTerm) return true; // Show all if no search term
+      
       return (
         key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (typeof value === 'string' && value.toLowerCase().includes(searchTerm.toLowerCase()))
+        (typeof value === 'string' && value.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (typeof value === 'object' && JSON.stringify(value).toLowerCase().includes(searchTerm.toLowerCase()))
       );
     });
     return filteredKeys.length > 0;
@@ -130,16 +190,105 @@ const EnhancedDeviceInfo = () => {
     >
       {/* Control Panel */}
       <View style={styles.controlPanel}>
-        {/* Search */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.text, borderColor: colors.border }]}
-            placeholder="Search device information..."
-            placeholderTextColor={colors.textSecondary}
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-          />
+        {/* Enhanced Search */}
+        <View style={styles.searchSection}>
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
+            <TextInput
+              style={[styles.searchInput, { 
+                color: colors.text, 
+                borderColor: showSearchSuggestions ? colors.primary : colors.border 
+              }]}
+              placeholder="Search device information..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchTerm}
+              onChangeText={handleSearchChange}
+              onFocus={() => setShowSearchSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 150)}
+            />
+            {searchTerm.length > 0 && (
+              <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Search Suggestions */}
+          {showSearchSuggestions && (
+            <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.suggestionsHeader}>
+                <Text style={[styles.suggestionsTitle, { color: colors.text }]}>
+                  {searchTerm ? 'Suggestions' : 'Popular Searches'}
+                </Text>
+              </View>
+              <View style={styles.suggestionsList}>
+                {getSearchSuggestions().map((suggestion, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleSearchSelect(suggestion)}
+                    style={[styles.suggestionItem, { borderColor: colors.border }]}
+                  >
+                    <Ionicons 
+                      name={searchTerm ? "search" : "trending-up"} 
+                      size={16} 
+                      color={colors.primary} 
+                      style={styles.suggestionIcon}
+                    />
+                    <Text style={[styles.suggestionText, { color: colors.text }]}>
+                      {suggestion}
+                    </Text>
+                    <Ionicons name="arrow-up-outline" size={14} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Search Filters */}
+          <View style={styles.filtersContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
+              {['all', 'hardware', 'software', 'network', 'battery', 'display'].map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  onPress={() => setSelectedCategory(filter)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: selectedCategory === filter ? colors.primary : colors.surface,
+                      borderColor: selectedCategory === filter ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.filterText,
+                      { color: selectedCategory === filter ? '#FFFFFF' : colors.text },
+                    ]}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Search Results Summary */}
+          {searchTerm && (
+            <View style={styles.searchSummary}>
+              <Text style={[styles.searchSummaryText, { color: colors.textSecondary }]}>
+                Found {filteredCategories.reduce((total, [, config]) => total + config.keys.filter(key => {
+                  const value = deviceInfo[key];
+                  return value && (
+                    key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (typeof value === 'string' && value.toLowerCase().includes(searchTerm.toLowerCase()))
+                  );
+                }).length, 0)} results for "{searchTerm}"
+              </Text>
+              <TouchableOpacity onPress={clearSearch}>
+                <Text style={[styles.clearText, { color: colors.primary }]}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Controls */}
@@ -327,10 +476,14 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  searchSection: {
+    marginBottom: 20,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    position: 'relative',
+    marginBottom: 12,
   },
   searchIcon: {
     position: 'absolute',
@@ -339,13 +492,101 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    height: 44,
+    height: 48,
     paddingLeft: 40,
-    paddingRight: 16,
-    borderWidth: 1,
-    borderRadius: 8,
+    paddingRight: 50,
+    borderWidth: 2,
+    borderRadius: 12,
     backgroundColor: colors.background,
     fontSize: fontSize,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 12,
+    zIndex: 1,
+    padding: 4,
+  },
+  suggestionsContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 0,
+    borderWidth: 1,
+    borderRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+    maxHeight: 250,
+  },
+  suggestionsHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  suggestionsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  suggestionsList: {
+    paddingVertical: 8,
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 0.5,
+  },
+  suggestionIcon: {
+    marginRight: 12,
+  },
+  suggestionText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  filtersContainer: {
+    marginBottom: 12,
+  },
+  filtersScroll: {
+    flexGrow: 0,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 8,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  filterText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  searchSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  searchSummaryText: {
+    fontSize: 12,
+    flex: 1,
+  },
+  clearText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   controlsRow: {
     flexDirection: 'row',
