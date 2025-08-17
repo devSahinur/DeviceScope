@@ -75,7 +75,13 @@ const EnhancedSearch = ({
   const handleSuggestionSelect = (suggestion) => {
     onSearchChange(suggestion);
     setShowSuggestions(false);
+    setIsFocused(false);
     Keyboard.dismiss();
+    
+    // Force immediate search by calling the change handler again
+    setTimeout(() => {
+      onSearchChange(suggestion);
+    }, 50);
   };
 
   const clearSearch = () => {
@@ -118,6 +124,17 @@ const EnhancedSearch = ({
         {searchTerm.length > 0 && (
           <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
             <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
+        {!isFocused && searchTerm.length > 0 && (
+          <TouchableOpacity 
+            onPress={() => {
+              setShowSuggestions(false);
+              Keyboard.dismiss();
+            }} 
+            style={[styles.searchButton, { backgroundColor: colors.primary }]}
+          >
+            <Ionicons name="search" size={16} color="#FFFFFF" />
           </TouchableOpacity>
         )}
         {isFocused && (
@@ -166,6 +183,9 @@ const EnhancedSearch = ({
                 onPress={() => handleSuggestionSelect(suggestion)}
                 style={[styles.suggestionItem, { borderColor: colors.border }]}
                 activeOpacity={0.7}
+                delayPressIn={0}
+                delayPressOut={0}
+                onPressIn={() => setShowSuggestions(true)} // Keep suggestions visible
               >
                 <Ionicons 
                   name="arrow-up-outline" 
@@ -228,7 +248,7 @@ const EnhancedSearch = ({
           <View style={styles.searchSummaryContent}>
             <Ionicons name="information-circle" size={16} color={colors.info} />
             <Text style={[styles.searchSummaryText, { color: colors.textSecondary }]}>
-              Searching for "{searchTerm}"
+              Searching for &ldquo;{searchTerm}&rdquo;
             </Text>
           </View>
           <TouchableOpacity onPress={clearSearch} style={styles.clearAllButton}>
@@ -268,6 +288,14 @@ const styles = StyleSheet.create({
   clearButton: {
     marginLeft: 8,
     padding: 4,
+  },
+  searchButton: {
+    marginLeft: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   doneButton: {
     marginLeft: 8,

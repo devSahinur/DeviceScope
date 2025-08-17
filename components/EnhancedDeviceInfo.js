@@ -19,11 +19,11 @@ import InfoTable from './InfoTable';
 import DownloadManager from './DownloadManager';
 
 const EnhancedDeviceInfo = () => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const { deviceInfo, realtimeUpdates, toggleRealtimeUpdates, refreshData } = useEnhancedDeviceInfo();
   const { performanceData } = usePerformanceMonitor();
   const [searchTerm, setSearchTerm] = useState('');
-  const [fontSize, setFontSize] = useState('medium');
+  const [fontSize] = useState('medium');
   const [refreshing, setRefreshing] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [searchHistory, setSearchHistory] = useState([]);
@@ -70,6 +70,11 @@ const EnhancedDeviceInfo = () => {
     // Add to search history
     const newHistory = [term, ...searchHistory.filter(h => h !== term)].slice(0, 5);
     setSearchHistory(newHistory);
+    // Force immediate search by triggering a small delay
+    setTimeout(() => {
+      // This will trigger the filtering immediately
+      setSearchTerm(term);
+    }, 10);
   };
 
   const clearSearch = () => {
@@ -193,24 +198,44 @@ const EnhancedDeviceInfo = () => {
         {/* Enhanced Search */}
         <View style={styles.searchSection}>
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
-            <TextInput
-              style={[styles.searchInput, { 
-                color: colors.text, 
-                borderColor: showSearchSuggestions ? colors.primary : colors.border 
-              }]}
-              placeholder="Search device information..."
-              placeholderTextColor={colors.textSecondary}
-              value={searchTerm}
-              onChangeText={handleSearchChange}
-              onFocus={() => setShowSearchSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 150)}
-            />
-            {searchTerm.length > 0 && (
-              <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            )}
+            <View style={styles.searchInputContainer}>
+              <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
+              <TextInput
+                style={[styles.searchInput, { 
+                  color: colors.text, 
+                  borderColor: showSearchSuggestions ? colors.primary : colors.border 
+                }]}
+                placeholder="Search device information..."
+                placeholderTextColor={colors.textSecondary}
+                value={searchTerm}
+                onChangeText={handleSearchChange}
+                onFocus={() => setShowSearchSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
+                returnKeyType="search"
+                onSubmitEditing={() => {
+                  setShowSearchSuggestions(false);
+                  // Trigger search action if needed
+                }}
+              />
+              {searchTerm.length > 0 && (
+                <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                  <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            {/* Search Button */}
+            <TouchableOpacity 
+              onPress={() => {
+                setShowSearchSuggestions(false);
+                // Force focus on search results
+              }}
+              style={[styles.searchButton, { backgroundColor: colors.primary }]}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="search" size={18} color="#FFFFFF" />
+              <Text style={styles.searchButtonText}>Search</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Search Suggestions */}
@@ -227,6 +252,11 @@ const EnhancedDeviceInfo = () => {
                     key={index}
                     onPress={() => handleSearchSelect(suggestion)}
                     style={[styles.suggestionItem, { borderColor: colors.border }]}
+                    activeOpacity={0.7}
+                    onPressIn={() => {
+                      // Prevent blur from hiding suggestions too early
+                      setShowSearchSuggestions(true);
+                    }}
                   >
                     <Ionicons 
                       name={searchTerm ? "search" : "trending-up"} 
@@ -243,6 +273,23 @@ const EnhancedDeviceInfo = () => {
               </View>
             </View>
           )}
+
+          {/* Quick Search Chips */}
+          <View style={styles.quickSearchContainer}>
+            <Text style={[styles.quickSearchLabel, { color: colors.textSecondary }]}>Quick Search:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickSearchScroll}>
+              {popularSearchTerms.slice(0, 6).map((term) => (
+                <TouchableOpacity
+                  key={term}
+                  onPress={() => handleSearchSelect(term)}
+                  style={[styles.quickSearchChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                >
+                  <Ionicons name="flash" size={12} color={colors.primary} />
+                  <Text style={[styles.quickSearchText, { color: colors.text }]}>{term}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
           {/* Search Filters */}
           <View style={styles.filtersContainer}>
@@ -282,7 +329,7 @@ const EnhancedDeviceInfo = () => {
                     key.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     (typeof value === 'string' && value.toLowerCase().includes(searchTerm.toLowerCase()))
                   );
-                }).length, 0)} results for "{searchTerm}"
+                }).length, 0)} results for &ldquo;{searchTerm}&rdquo;
               </Text>
               <TouchableOpacity onPress={clearSearch}>
                 <Text style={[styles.clearText, { color: colors.primary }]}>Clear</Text>
@@ -420,11 +467,11 @@ const EnhancedDeviceInfo = () => {
             No results found
           </Text>
           <Text style={[styles.noResultsText, { color: colors.textSecondary }]}>
-            No device information matches "{searchTerm}". Try a different search term.
+            No device information matches &ldquo;{searchTerm}&rdquo;. Try a different search term.
           </Text>
           <TouchableOpacity
             onPress={() => setSearchTerm('')}
-            style={[styles.clearButton, { backgroundColor: colors.primary }]}
+            style={[styles.clearSearchButton, { backgroundColor: colors.primary }]}
           >
             <Text style={styles.clearButtonText}>Clear Search</Text>
           </TouchableOpacity>
@@ -484,6 +531,13 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     marginBottom: 12,
+    gap: 12,
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
   },
   searchIcon: {
     position: 'absolute',
@@ -509,6 +563,25 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
     right: 12,
     zIndex: 1,
     padding: 4,
+  },
+  searchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    minWidth: 80,
+  },
+  searchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   suggestionsContainer: {
     position: 'absolute',
@@ -588,6 +661,36 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  quickSearchContainer: {
+    marginBottom: 12,
+  },
+  quickSearchLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  quickSearchScroll: {
+    flexGrow: 0,
+  },
+  quickSearchChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginRight: 8,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  quickSearchText: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
   controlsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -665,7 +768,7 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  clearButton: {
+  clearSearchButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

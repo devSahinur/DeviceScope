@@ -12,7 +12,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import usePerformanceMonitor from '../hooks/usePerformanceMonitor';
 
 const PerformanceMonitor = () => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const { performanceData, isMonitoring, toggleMonitoring, getAverageMetrics } = usePerformanceMonitor();
   const screenWidth = Dimensions.get('window').width;
   

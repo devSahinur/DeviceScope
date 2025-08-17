@@ -18,7 +18,7 @@ const InfoTable = ({ data, searchTerm = '' }) => {
     try {
       await Clipboard.setStringAsync(text);
       Alert.alert('Copied', 'Value copied to clipboard');
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to copy to clipboard');
     }
   };
@@ -59,7 +59,7 @@ const InfoTable = ({ data, searchTerm = '' }) => {
           part
         )
       );
-    } catch (error) {
+    } catch (_error) {
       return text; // Fallback if regex fails
     }
   };

@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 
 const ThemeToggle = () => {
-  const { theme, isDark, toggleTheme, colors } = useTheme();
+  const { theme, toggleTheme, colors } = useTheme();
   const { width } = Dimensions.get('window');
   const isSmallScreen = width < 600;
   
@@ -20,17 +20,17 @@ const ThemeToggle = () => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  // Theme position mapping
-  const getThemePosition = () => {
-    switch (theme) {
-      case 'light': return 0;
-      case 'dark': return 1;
-      case 'system': return 2;
-      default: return 0;
-    }
-  };
-
   useEffect(() => {
+    // Theme position mapping
+    const getThemePosition = () => {
+      switch (theme) {
+        case 'light': return 0;
+        case 'dark': return 1;
+        case 'system': return 2;
+        default: return 0;
+      }
+    };
+
     // Slide animation
     Animated.spring(slideAnim, {
       toValue: getThemePosition(),
@@ -52,7 +52,7 @@ const ThemeToggle = () => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [theme]);
+  }, [theme, slideAnim, rotateAnim]);
 
   const handlePress = () => {
     // Scale animation on press
