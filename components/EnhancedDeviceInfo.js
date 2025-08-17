@@ -152,8 +152,10 @@ const EnhancedDeviceInfo = () => {
               {
                 backgroundColor: realtimeUpdates ? colors.success : colors.surface,
                 borderColor: realtimeUpdates ? colors.success : colors.border,
+                shadowColor: realtimeUpdates ? colors.success : colors.border,
               },
             ]}
+            activeOpacity={0.8}
           >
             <Ionicons
               name={realtimeUpdates ? 'pause' : 'play'}
@@ -168,12 +170,23 @@ const EnhancedDeviceInfo = () => {
             >
               {realtimeUpdates ? 'Live' : 'Static'}
             </Text>
+            {realtimeUpdates && (
+              <View style={[styles.liveDot, { backgroundColor: '#FFFFFF' }]} />
+            )}
           </TouchableOpacity>
 
           {/* Refresh Button */}
           <TouchableOpacity
             onPress={refreshData}
-            style={[styles.controlButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+            style={[
+              styles.controlButton, 
+              { 
+                backgroundColor: colors.primary, 
+                borderColor: colors.primary,
+                shadowColor: colors.primary,
+              }
+            ]}
+            activeOpacity={0.8}
           >
             <Ionicons name="refresh" size={16} color="#FFFFFF" />
             <Text style={[styles.controlButtonText, { color: '#FFFFFF' }]}>
@@ -338,20 +351,40 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 16,
+    gap: 12,
   },
   controlButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    minWidth: 80,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    minWidth: 90,
+    flex: 1,
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    position: 'relative',
   },
   controlButtonText: {
-    marginLeft: 4,
-    fontSize: fontSize - 2,
-    fontWeight: '500',
+    marginLeft: 6,
+    fontSize: fontSize - 1,
+    fontWeight: '600',
+  },
+  liveDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
   },
   statusRow: {
     flexDirection: 'row',

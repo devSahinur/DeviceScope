@@ -48,10 +48,5 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "extra": {
-      "eas": {
-        "projectId": "your-project-id"
-      }
-    }
   }
 }
