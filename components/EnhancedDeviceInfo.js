@@ -28,6 +28,7 @@ const EnhancedDeviceInfo = () => {
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [searchHistory, setSearchHistory] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const fontSizes = {
     small: 12,
@@ -197,44 +198,83 @@ const EnhancedDeviceInfo = () => {
       <View style={styles.controlPanel}>
         {/* Enhanced Search */}
         <View style={styles.searchSection}>
-          <View style={styles.searchContainer}>
-            <View style={styles.searchInputContainer}>
-              <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
-              <TextInput
-                style={[styles.searchInput, { 
-                  color: colors.text, 
-                  borderColor: showSearchSuggestions ? colors.primary : colors.border 
-                }]}
-                placeholder="Search device data, specs, battery..."
-                placeholderTextColor={colors.textSecondary}
-                value={searchTerm}
-                onChangeText={handleSearchChange}
-                onFocus={() => setShowSearchSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
-                returnKeyType="search"
-                onSubmitEditing={() => {
-                  setShowSearchSuggestions(false);
-                  // Trigger search action if needed
-                }}
-              />
-              {searchTerm.length > 0 && (
-                <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                  <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
-                </TouchableOpacity>
-              )}
+          <Text style={[styles.searchLabel, { color: colors.text }]}>Search Device Information</Text>
+          <View style={styles.searchWrapper}>
+            <View style={[styles.searchContainer, { 
+              backgroundColor: colors.surface,
+              borderColor: isSearchFocused ? colors.primary : colors.border,
+              shadowColor: colors.text,
+              transform: [{ scale: isSearchFocused ? 1.02 : 1 }]
+            }]}>
+              <View style={styles.searchInputContainer}>
+                <View style={[styles.searchIconContainer, { backgroundColor: colors.primary + '15' }]}>
+                  <Ionicons 
+                    name="search" 
+                    size={20} 
+                    color={isSearchFocused ? colors.primary : colors.textSecondary} 
+                  />
+                </View>
+                <TextInput
+                  style={[styles.searchInput, { 
+                    color: colors.text,
+                    backgroundColor: 'transparent'
+                  }]}
+                  placeholder="Search device data, specs, battery, memory..."
+                  placeholderTextColor={colors.textSecondary}
+                  value={searchTerm}
+                  onChangeText={handleSearchChange}
+                  onFocus={() => {
+                    setShowSearchSuggestions(true);
+                    setIsSearchFocused(true);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setShowSearchSuggestions(false);
+                      setIsSearchFocused(false);
+                    }, 200);
+                  }}
+                  returnKeyType="search"
+                  onSubmitEditing={() => {
+                    setShowSearchSuggestions(false);
+                  }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {searchTerm.length > 0 && (
+                  <TouchableOpacity 
+                    onPress={clearSearch} 
+                    style={[styles.clearButton, { backgroundColor: colors.error + '20' }]}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="close-circle" size={18} color={colors.error} />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
             
-            {/* Search Button */}
+            {/* Enhanced Search Button */}
             <TouchableOpacity 
               onPress={() => {
                 setShowSearchSuggestions(false);
-                // Force focus on search results
+                if (searchTerm.trim()) {
+                  // Perform search action
+                }
               }}
-              style={[styles.searchButton, { backgroundColor: colors.primary }]}
+              style={[styles.searchButton, { 
+                backgroundColor: searchTerm.length > 0 ? colors.primary : colors.textSecondary,
+                shadowColor: colors.primary
+              }]}
               activeOpacity={0.8}
+              disabled={searchTerm.length === 0}
             >
-              <Ionicons name="search" size={18} color="#FFFFFF" />
-              <Text style={styles.searchButtonText}>Search</Text>
+              <View style={styles.searchButtonContent}>
+                <Ionicons 
+                  name={searchTerm.length > 0 ? "search" : "search-outline"} 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+                <Text style={styles.searchButtonText}>Find</Text>
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -278,14 +318,24 @@ const EnhancedDeviceInfo = () => {
           <View style={styles.quickSearchContainer}>
             <Text style={[styles.quickSearchLabel, { color: colors.textSecondary }]}>Quick Search:</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickSearchScroll}>
-              {popularSearchTerms.slice(0, 6).map((term) => (
+              {popularSearchTerms.slice(0, 8).map((term) => (
                 <TouchableOpacity
                   key={term}
                   onPress={() => handleSearchSelect(term)}
-                  style={[styles.quickSearchChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  style={[styles.quickSearchChip, { 
+                    backgroundColor: searchTerm === term ? colors.primary : colors.surface, 
+                    borderColor: searchTerm === term ? colors.primary : colors.border 
+                  }]}
+                  activeOpacity={0.7}
                 >
-                  <Ionicons name="flash" size={12} color={colors.primary} />
-                  <Text style={[styles.quickSearchText, { color: colors.text }]}>{term}</Text>
+                  <Ionicons 
+                    name={searchTerm === term ? "checkmark-circle" : "flash"} 
+                    size={14} 
+                    color={searchTerm === term ? '#FFFFFF' : colors.primary} 
+                  />
+                  <Text style={[styles.quickSearchText, { 
+                    color: searchTerm === term ? '#FFFFFF' : colors.text 
+                  }]}>{term}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -524,64 +574,83 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
     borderColor: colors.border,
   },
   searchSection: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
-  searchContainer: {
+  searchLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
-    marginBottom: 12,
     gap: 12,
+    marginBottom: 16,
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 56,
+    borderWidth: 2,
+    borderRadius: 28,
+    paddingHorizontal: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
   },
   searchInputContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
+    paddingHorizontal: 8,
   },
-  searchIcon: {
-    position: 'absolute',
-    left: 12,
-    zIndex: 1,
+  searchIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   searchInput: {
     flex: 1,
-    height: 48,
-    paddingLeft: 40,
-    paddingRight: 50,
-    borderWidth: 2,
-    borderRadius: 12,
-    backgroundColor: colors.background,
-    fontSize: fontSize,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    fontSize: fontSize + 1,
+    fontWeight: '500',
+    paddingVertical: 12,
+    paddingRight: 8,
   },
   clearButton: {
-    position: 'absolute',
-    right: 12,
-    zIndex: 1,
-    padding: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   searchButton: {
-    flexDirection: 'row',
+    width: 72,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  searchButtonContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-    minWidth: 80,
   },
   searchButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 4,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
+    letterSpacing: 0.5,
   },
   suggestionsContainer: {
     position: 'absolute',
@@ -676,20 +745,21 @@ const createStyles = (colors, fontSize) => StyleSheet.create({
   quickSearchChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginRight: 8,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    marginRight: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   quickSearchText: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginLeft: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+    letterSpacing: 0.3,
   },
   controlsRow: {
     flexDirection: 'row',
