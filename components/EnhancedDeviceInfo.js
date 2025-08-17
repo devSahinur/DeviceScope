@@ -205,7 +205,7 @@ const EnhancedDeviceInfo = () => {
                   color: colors.text, 
                   borderColor: showSearchSuggestions ? colors.primary : colors.border 
                 }]}
-                placeholder="Search device information..."
+                placeholder="Search device data, specs, battery..."
                 placeholderTextColor={colors.textSecondary}
                 value={searchTerm}
                 onChangeText={handleSearchChange}
