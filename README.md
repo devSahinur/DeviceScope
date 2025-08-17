@@ -189,3 +189,8 @@ This project is licensed under the MIT License.
 ## Support
 
 For issues and feature requests, please create an issue in the repository.
+
+---
+
+**DeviceScope** - Comprehensive Device Intelligence Platform  
+Built with ❤️ using React Native and Expo
