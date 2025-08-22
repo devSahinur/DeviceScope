@@ -1,0 +1,23 @@
+
+services:
+  devicescope:
+    build: .
+    ports:
+      - "8083:8081"
+      - "19020:19000"
+      - "19021:19001"
+      - "19022:19002"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+    stdin_open: true
+    tty: true
+    networks:
+      - expo-network
+
+networks:
+  expo-network:
+    driver: bridge

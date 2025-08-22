@@ -1,0 +1,51 @@
+# Node modules
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug
+*.log
+*.log.*
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment variables
+.env.local
+.env
+
+# Build artifacts
+android/app/build/
+android/build/
+ios/build/
+
+# Git
+.git
+.gitignore
+README.md
+BUILD_APK.md
+
+# IDE
+.vscode/
+.idea/
